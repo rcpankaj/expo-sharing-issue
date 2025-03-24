@@ -1,50 +1,117 @@
-# Welcome to your Expo app 👋
+# 📌 Expo Sharing Issue on iOS Gmail
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This repository demonstrates an issue where **Gmail on iOS does not attach images** when using `Sharing.shareAsync()` in an **Expo React Native (Managed Workflow)** app. The issue is specific to **Gmail on iOS**—it works fine on **Slack, Mail, WhatsApp, and Android Gmail**.
 
-## Get started
+---
 
-1. Install dependencies
+## 📂 Project Setup
 
-   ```bash
-   npm install
-   ```
+### 1️⃣ Clone the repository
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+git clone https://github.com/rcpankaj/expo-sharing-issue.git
+cd expo-sharing-issue
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2️⃣ Install dependencies
+sh
+Copy
+Edit
+npm install # or yarn install
+3️⃣ Run the development build
+sh
+Copy
+Edit
+expo start --dev-client
+4️⃣ Test the share functionality:
+Click the "Share QR Code" button.
 
-## Learn more
+Select Gmail on iOS as the sharing option.
 
-To learn more about developing your project with Expo, look at the following resources:
+🛠 Issue Description
+When using Sharing.shareAsync() to share an image, the Gmail compose window opens with the text message but does not attach the image.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The same code works with Slack, Mail, and other apps.
 
-## Join the community
+The issue only happens on iOS Gmail.
 
-Join our community of developers creating universal apps.
+Expected Behavior
+✅ The Gmail compose window should open with the image attached.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Actual Behavior
+❌ The Gmail compose window opens, but only the text appears—image is missing.
+
+📌 Code Example
+tsx
+Copy
+Edit
+const handleShare = async () => {
+if (!viewShotRef.current) return;
+
+try {
+const uri = await captureRef(viewShotRef, {
+format: 'jpg',
+quality: 0.8,
+});
+if (!uri) return;
+
+    const filePath = `${FileSystem.cacheDirectory}qrcode.jpg`;
+    await FileSystem.copyAsync({ from: uri, to: filePath });
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(filePath, {
+        mimeType: 'image/jpeg',
+        dialogTitle: 'Share QR Code',
+      });
+    } else {
+      await Share.share({
+        message: 'Here is the QR code.',
+        url: filePath,
+      });
+    }
+
+} catch (error) {
+console.error('Error sharing QR code:', error);
+}
+};
+🔍 Debugging Attempts
+✔️ Verified that the file exists using FileSystem.getInfoAsync().
+✔️ Tried setting mimeType: 'image/jpeg'.
+✔️ Tested MailComposer, but Gmail still ignores the attachment.
+✔️ Confirmed the issue does not exist on Android Gmail.
+
+📌 Environment Details
+Expo SDK Version: Run expo --version to confirm.
+
+React Native Version: Managed workflow (expo-dev-client)
+
+Platform: iOS (Issue only in Gmail, works fine on Android)
+
+Latest Expo Version: ✅ Tested & issue still exists
+
+🚀 Possible Workarounds & Help Needed
+Is this a known limitation with expo-sharing or expo-file-system?
+
+Any suggestions to force Gmail to recognize the image attachment?
+
+Would setting UTI: 'public.jpeg' or another workaround be needed?
+
+📄 License
+This project is open-source and available under the MIT License.
+
+yaml
+Copy
+Edit
+
+---
+
+### 📌 **How to Use This File**
+
+1. **Save it as `README.md`** in your project root.
+2. **Push it to GitHub:**
+   ```sh
+   git add README.md
+   git commit -m "Add README"
+   git push origin main
+   This README will provide a clear and structured report of your issue for GitHub. 🚀 Let me know if you need any changes!
+   ```
