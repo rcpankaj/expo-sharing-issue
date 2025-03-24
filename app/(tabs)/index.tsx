@@ -1,63 +1,67 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Alert, Button, Share, StyleSheet, View } from "react-native";
+import { captureRef } from "react-native-view-shot";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { useRef } from "react";
 
 export default function HomeScreen() {
+  const viewShotRef = useRef(null);
+
+  const handleShare = async () => {
+    if (!viewShotRef.current) return;
+
+    try {
+      // Capture screenshot
+      const uri = await captureRef(viewShotRef, {
+        format: "jpg",
+        quality: 0.8,
+      });
+      if (!uri) return;
+
+      const filePath = `${FileSystem.cacheDirectory}qrcode.jpg`;
+
+      // Save to cache
+      await FileSystem.copyAsync({ from: uri, to: filePath });
+
+      // Ensure the file exists
+      const fileInfo = await FileSystem.getInfoAsync(filePath);
+      if (!fileInfo.exists) {
+        console.error("File does not exist:", filePath);
+        return;
+      }
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(filePath, {
+          mimeType: "image/jpeg",
+          dialogTitle: "Share QR Code",
+        });
+      } else {
+        await Share.share({
+          message: "Here is the QR code.",
+          url: filePath,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing QR code:", error);
+      Alert.alert("Error", "Failed to share QR code.");
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View
+      ref={viewShotRef}
+      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+    >
+      <Button title="Share QR Code" onPress={handleShare} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -69,6 +73,6 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
