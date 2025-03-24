@@ -1,7 +1,15 @@
-import { Alert, Button, Share, StyleSheet, View } from "react-native";
-import { captureRef } from "react-native-view-shot";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import {
+  Alert,
+  Image,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import ViewShot, { captureRef } from "react-native-view-shot";
 
 import { useRef } from "react";
 
@@ -13,14 +21,17 @@ export default function HomeScreen() {
 
     try {
       // Capture screenshot
-      const uri = await captureRef(viewShotRef, {
+
+      const uri = await captureRef(viewShotRef.current, {
         format: "jpg",
         quality: 0.8,
       });
+
+      console.log(uri, "jwknf");
+
       if (!uri) return;
 
       const filePath = `${FileSystem.cacheDirectory}qrcode.jpg`;
-
       // Save to cache
       await FileSystem.copyAsync({ from: uri, to: filePath });
 
@@ -49,30 +60,60 @@ export default function HomeScreen() {
   };
 
   return (
-    <View
-      ref={viewShotRef}
-      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-    >
-      <Button title="Share QR Code" onPress={handleShare} />
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ViewShot
+        ref={viewShotRef}
+        options={{ fileName: "qr_code", format: "png", quality: 1.0 }}
+      >
+        <View style={styles.container}>
+          <Image
+            source={{
+              uri: "https://via.placeholder.com/100",
+            }}
+            style={styles.avatar}
+          />
+          <Text style={styles.name}>{"User"}</Text>
+          <Text style={styles.amount}>{"0.00"}</Text>
+          <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+            <Text style={styles.shareText}>Share QR Code</Text>
+          </TouchableOpacity>
+        </View>
+      </ViewShot>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
+  container: {
     alignItems: "center",
-    gap: 8,
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#000",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  name: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
+  amount: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  shareButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+  },
+  shareText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
